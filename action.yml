@@ -1,19 +1,37 @@
-name: 'New action template'
-description: 'Need to update'
-author: Evgenii Kuzakov
-  # inputs:
-  #  yamllint_version:
-  #    description: 'yamllint version'
-  #    required: false
-  #    default: "1.32.0"
+name: 'SSH Setup'
+description: 'Handles SSH key setup'
+inputs:
+  ssh-private-key:
+    description: 'Private SSH Key'
+    required: true
+  ssh-private-key-type:
+    description: 'Private SSH Key type'
+    required: false
+    default: rsa
+  ssh-known-hosts:
+    description: 'SSH Known Hosts'
+    required: true
 
-  #runs:
-  #  using: 'composite'
-  #  steps:
-  #    - name: Cache some data
-  #      id: cache_some_id
-  #      uses: actions/cache@v2
-  #      with:
-  #        path: ~/.cache/pip
-  #        key: pip-data-${{ runner.os }}-yamllint-${{ inputs.yamllint_version }}
-  #        restore-keys: pip-data-${{ runner.os }}-yamllint-${{ inputs.yamllint_version }}
+runs:
+  using: "composite"
+  steps:
+    - name: Validate ssh-private-key-type
+      run: |
+        if [[ "${{ inputs.ssh-private-key-type }}" != "rsa" && "${{ inputs.ssh-private-key-type }}" != "dsa" && "${{ inputs.ssh-private-key-type }}" != "ecdsa" ]]; then
+          echo "Invalid ssh-private-key-type. Allowed types are: rsa, dsa, ecdsa."
+          exit 1
+        fi
+    - name: Setup SSH Keys
+      shell: bash
+      run: |
+        mkdir -p "${HOME}/.ssh"
+        cat << SSH_DEPLOY_PRIVATE_KEY > "${HOME}/.ssh/id_rsa"
+        ${{ inputs.ssh-private-key }}
+        SSH_DEPLOY_PRIVATE_KEY
+
+        cat << SSH_KNOWN_HOSTS > "${HOME}/.ssh/known_hosts"
+        ${{ inputs.ssh-known-hosts }}
+        SSH_KNOWN_HOSTS
+
+        sudo chmod -R go-rwx "${HOME}/.ssh"
+        sudo chown -R "${USER}:${USER}" "${HOME}/.ssh"
