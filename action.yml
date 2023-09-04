@@ -16,6 +16,7 @@ runs:
   using: "composite"
   steps:
     - name: Validate ssh-private-key-type
+      shell: bash
       run: |
         if [[ "${{ inputs.ssh-private-key-type }}" != "rsa" && "${{ inputs.ssh-private-key-type }}" != "dsa" && "${{ inputs.ssh-private-key-type }}" != "ecdsa" ]]; then
           echo "Invalid ssh-private-key-type. Allowed types are: rsa, dsa, ecdsa."
